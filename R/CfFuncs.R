@@ -3,9 +3,9 @@
 #' @param fd vector of discount factors used to discount cashflows in \code{1:length(fd)} periods
 #' @param effective spread
 adjustDisc <- function(fd,spread) {
-  zerosTem <- (1/fd)^(1/seq(along.with=fd))
-  zerosTemAdj <- zerosTem + spread
-  1/(zerosTemAdj^(seq(along.with=zerosTemAdj)))
+  zeros <- (1/fd)^(1/seq(along.with=fd))
+  zerosAdj <- zerosTem + spread
+  1/(zerosAdj^(seq(along.with=zerosAdj)))
 }
 
 #' Calculates the Total Financial Cost (CFT)
