@@ -2,10 +2,10 @@
 #' 
 #' @param fd vector of discount factors used to discount cashflows in \code{1:length(fd)} periods
 #' @param effective spread
-adjustDisc <- function(fd,spread) {
+adjust_disc <- function(fd,spread) {
   zeros <- (1/fd)^(1/seq(along.with=fd))
-  zerosAdj <- zerosTem + spread
-  1/(zerosAdj^(seq(along.with=zerosAdj)))
+  zeros_adj <- zeros + spread
+  1/(zeros_adj^(seq(along.with=zerosAdj)))
 }
 
 #' Calculates the Total Financial Cost (CFT)
@@ -21,10 +21,10 @@ adjustDisc <- function(fd,spread) {
 #' @param rate The loan rate, in  effective rate
 #' @param upFee The fee that the loan taker pays upfront
 #' @param perFee The fee that the loan payer pays every period
-cft <- function(amt, maturity, rate, upFee = 0, perFee = 0) {
-  fullAmt <- amt + upFee
-  paymt <- getPaymt(amt = fullAmt, maturity = maturity, rate = rate)
-  getRate(amt = amt, maturity = maturity, paymt = paymt + perFee)
+cft <- function(amt, maturity, rate, up_fee = 0, per_fee = 0) {
+  full_amt <- amt + up_fee
+  p <- pmt(amt = full_amt, maturity = maturity, rate = rate)
+  rate(amt = amt, maturity = maturity, pmt = p + per_fee)
 }
 
 #' Net Present Value of a cashflow (NPV)
@@ -49,7 +49,7 @@ irr <- function(cf, t=seq(from=0,by=1,along.with=cf)) { uniroot(npv, c(0,100000)
 #' @param amt The amount of the loan
 #' @param maturity The maturity of the loan
 #' @param rate The rate of the loan
-getPaymt <- function(amt, maturity, rate) {  
+pmt <- function(amt, maturity, rate) {  
   return(amt*tasa/(1-(1+rate)^(-maturity)))
 }
 
@@ -59,28 +59,15 @@ getPaymt <- function(amt, maturity, rate) {
 #' 
 #' @param amt The amount of the loan
 #' @param maturity The maturity of the loan
-#' @param paymt The payments of the loan
-getRate <- function(amt, maturity, paymt, extrema=c(1e-4,1e9), tol=1e-4) {   
-  zerome <- function(r) amt/paymt-(1-1/(1+r)^maturity)/r
+#' @param pmt The payments of the loan
+rate <- function(amt, maturity, pmt, extrema=c(1e-4,1e9), tol=1e-4) {   
+  zerome <- function(r) amt/pmt-(1-1/(1+r)^maturity)/r
   if(zerome(extrema[1])>0) return(0)
   if(zerome(extrema[2])<0) return(extrema[2])
   return(uniroot(zerome, interval=extrema, tol=tol)$root)
 }
 
-getRate <- Vectorize(FUN=getRate,vectorize.args=c("amt","maturity","paymt"))
-
-#' Present value of a constant cashflow
-#' 
-#' Discounted value of a constant cashflow that ocurrs every period from here to maturity
-#' 
-#' @param f The periodic and constant cashflow
-#' @param maturity The number of periods it repeats
-#' @param fd The discount factors. f[x] is used to discount the cashflow in the x period
-valueConstCf <- function(f,maturity,fd) {
-  return (f*sum(fd[1:maturity]))
-}
-
-valueConstCf <- Vectorize(FUN=valueConstCf,vectorize.args=c("f","maturity"))
+rate <- Vectorize(FUN=rate,vectorize.args=c("amt","maturity","pmt"))
 
 #' Cashflow for a bullet loan
 #' 
@@ -112,16 +99,16 @@ zeroCashflow <- function(rate,maturity) {
 #' 
 #' @param rate The rate of the loan, as an effective periodic rate
 #' @param maturity The maturity of the loan
-germanCashflow <- function(rate,maturity,graceAmt = 0,graceInt = 0) {
-  stopifnot(graceInt <= graceAmt)
-  stopifnot(graceAmt < maturity)
-  if (graceInt > 0) {
+germanCashflow <- function(rate,maturity,grace_amt = 0,grace_int = 0) {
+  stopifnot(grace_int <= grace_amt)
+  stopifnot(grace_amt < maturity)
+  if (grace_int > 0) {
     return (c(
-      rep(0,times=graceInt),
-      (1+rate)^graceInt*germanCashflow(rate=rate,maturity=maturity-graceInt,graceAmt = graceAmt-graceInt,graceInt=0)))
+      rep(0,times=grace_int),
+      (1+rate)^grace_int*germanCashflow(rate=rate,maturity=maturity-grace_int,grace_amt = grace_amt-grace_int,grace_int=0)))
   } else {
-    p <- maturity - graceAmt
-    k <- c(rep(x=0,times=graceAmt),rep(1/p,times=p))
+    p <- maturity - grace_amt
+    k <- c(rep(x=0,times=grace_amt),rep(1/p,times=p))
     krem <- c(1,1-cumsum(k))
     i <- krem[-maturity]*rate
     return (k+i)
@@ -134,16 +121,16 @@ germanCashflow <- function(rate,maturity,graceAmt = 0,graceInt = 0) {
 #' 
 #' @param rate The rate of the loan, as an effective periodic rate
 #' @param maturity The maturity of the loan
-frenchCashflow <- function(rate,maturity,graceAmt = 0,graceInt = 0) {
-  stopifnot(graceInt <= graceAmt)
-  stopifnot(graceAmt < maturity)
+frenchCashflow <- function(rate,maturity,grace_amt = 0,grace_int = 0) {
+  stopifnot(grace_int <= grace_amt)
+  stopifnot(grace_amt < maturity)
   if (graceInt > 0) {
     return (c(
-      rep(0,times=graceInt),
-      (1+rate)^graceInt*frenchCashflow(rate=rate,maturity=maturity-graceInt,graceAmt = graceAmt-graceInt,graceInt=0)))
+      rep(0,times=grace_int),
+      (1+rate)^grace_int*frenchCashflow(rate=rate,maturity=maturity-grace_int,grace_amt = grace_amt-grace_int,grace_int=0)))
   } else {
-    p <- maturity - graceAmt
-    c(rep(rate,times=graceAmt),rep(rate / (1 - (1+rate)^(-p)),times=p))
+    p <- maturity - grace_amt
+    c(rep(rate,times=grace_amt),rep(rate / (1 - (1+rate)^(-p)),times=p))
   }
 }
 
@@ -151,7 +138,7 @@ frenchCashflow <- function(rate,maturity,graceAmt = 0,graceInt = 0) {
 #' 
 #' @param disc The discount factor curve
 #' @param cf The cashflow
-discCf <- function(disc,cf) {
+disc_cf <- function(disc,cf) {
   sum(disc*cf)
 }
 
