@@ -1,8 +1,8 @@
-\name{getPaymt}
-\alias{getPaymt}
+\name{pmt}
+\alias{pmt}
 \title{The value of the payment of a loan with constant payments (french type amortization)}
 \usage{
-getPaymt(amt, maturity, rate)
+pmt(amt, maturity, rate)
 }
 \arguments{
   \item{amt}{The amount of the loan}

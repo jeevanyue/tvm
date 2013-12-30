@@ -1,8 +1,8 @@
-\name{spotToDisc}
-\alias{spotToDisc}
+\name{spot_to_disc}
+\alias{spot_to_disc}
 \title{Converts a spot curve to a futures curve}
 \usage{
-spotToDisc(spot)
+spot_to_disc(spot)
 }
 \arguments{
   \item{spot}{The spot curve}

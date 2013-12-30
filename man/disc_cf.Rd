@@ -1,8 +1,8 @@
-\name{discCf}
-\alias{discCf}
+\name{disc_cf}
+\alias{disc_cf}
 \title{Value of a discounted cashflow}
 \usage{
-discCf(disc, cf)
+disc_cf(disc, cf)
 }
 \arguments{
   \item{disc}{The discount factor curve}

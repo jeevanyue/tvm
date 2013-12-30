@@ -12,7 +12,8 @@ npv(i, cf, t = seq(from = 0, by = 1, along.with = cf))
   \item{cf}{The cashflow}
 
   \item{t}{The times on which the cashflow ocurrs. It is
-  assumed that cf[idx] happens at moment t[idx]}
+  assumed that \code{cf[idx]} happens at moment
+  \code{t[idx]}}
 }
 \description{
 Net Present Value of a cashflow (NPV)

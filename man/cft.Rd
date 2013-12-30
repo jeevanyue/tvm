@@ -2,7 +2,7 @@
 \alias{cft}
 \title{Calculates the Total Financial Cost (CFT)}
 \usage{
-cft(amt, maturity, rate, upFee = 0, perFee = 0)
+cft(amt, maturity, rate, up_fee = 0, per_fee = 0)
 }
 \arguments{
   \item{amt}{The amount of the loan}

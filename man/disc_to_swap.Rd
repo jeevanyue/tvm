@@ -1,8 +1,8 @@
-\name{discToSwap}
-\alias{discToSwap}
+\name{disc_to_swap}
+\alias{disc_to_swap}
 \title{Converts a discount factor curve to a swap rate curve}
 \usage{
-discToSwap(disc)
+disc_to_swap(disc)
 }
 \arguments{
   \item{disc}{The discount curve}

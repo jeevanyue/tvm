@@ -1,8 +1,8 @@
-\name{futToSpot}
-\alias{futToSpot}
+\name{fut_to_spot}
+\alias{fut_to_spot}
 \title{Converts a futures curve to a spot curve}
 \usage{
-futToSpot(fut)
+fut_to_spot(fut)
 }
 \arguments{
   \item{fut}{The futures curve}

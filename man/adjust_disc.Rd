@@ -1,8 +1,8 @@
-\name{adjustDisc}
-\alias{adjustDisc}
+\name{adjust_disc}
+\alias{adjust_disc}
 \title{Adjusts the discount factors by a spread}
 \usage{
-adjustDisc(fd, spread)
+adjust_disc(fd, spread)
 }
 \arguments{
   \item{fd}{vector of discount factors used to discount
