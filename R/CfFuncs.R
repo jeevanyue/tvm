@@ -69,69 +69,73 @@ rate <- function(amt, maturity, pmt, extrema=c(1e-4,1e9), tol=1e-4) {
 
 rate <- Vectorize(FUN=rate,vectorize.args=c("amt","maturity","pmt"))
 
+loan <- function(rate,maturity,amt,type,grace_int = 0, grace_amort = grace_int) {
+  stopifnot(grace_int <= grace_amort)
+  stopifnot(grace_amort < maturity)
+  l <- structure(list(rate = rate, maturity = maturity, amt = amt, type = type, grace_amort = 0, grace_int = 0), class = c(type,"loan"))
+  if (grace_amort > 0 || grace_int > 0) {
+    sl <- loan(rate=rate,maturity=maturity-grace_amort,amt=1,type=type)
+    l$cf <- amt*(1+rate)^grace_int*c(rep_len(0,grace_int),rep_len(rate,grace_amort-grace_int),sl$cf)  
+  } else {
+    l$cf <- cashflow(l)  
+  }
+  l
+}
+
+cashflow <- function(l) {
+  UseMethod("cashflow")
+}
+
 #' Cashflow for a bullet loan
 #' 
 #' A bullet loan pays interest periodically and returns its principal at maturity
 #' 
-#' @param rate The rate of the loan, as an effective periodic rate
-#' @param maturity The maturity of the loan
-bulletCashflow <- function(rate,maturity) {
-  f <- rep(rate,times=maturity)
-  f[maturity] <- 1 + f[maturity]
-  f
+#' @param l The loan
+cashflow.loan <- function(l) {
+  stop("Can't get cashflow for a loan without the proper type")
+}
+
+#' Cashflow for a bullet loan
+#' 
+#' A bullet loan pays interest periodically and returns its principal at maturity
+#' 
+#' @param l The loan
+cashflow.bullet <- function(l) {
+  f <- rep_len(l$rate,l$maturity)
+  f[l$maturity] <- 1 + f[l$maturity]
+  f*l$amt
 }
 
 #' Cashflow for a zero loan
 #' 
 #' A zero loan makes an only payment, paying everything at maturity
 #' 
-#' @param rate The rate of the loan, as an effective rate with periodicity equal to the periodicity of the units of the maturity
-#' @param maturity The maturity of the loan
-zeroCashflow <- function(rate,maturity) {
-  f <- rep(0,times=maturity)
-  f[maturity] <- (1 + tasa)^maturity
-  f
+#' @param l The loan
+cashflow.zero <- function(l) {
+  f <- rep_len(0,l$maturity)
+  f[l$maturity] <- (1 + l$rate)^l$maturity
+  f*l$amt
 }
 
 #' Cashflow for a german loan
 #' 
 #' A german loan has constant amortizations
 #' 
-#' @param rate The rate of the loan, as an effective periodic rate
-#' @param maturity The maturity of the loan
-germanCashflow <- function(rate,maturity,grace_amt = 0,grace_int = 0) {
-  stopifnot(grace_int <= grace_amt)
-  stopifnot(grace_amt < maturity)
-  if (grace_int > 0) {
-    return (c(
-      rep(0,times=grace_int),
-      (1+rate)^grace_int*germanCashflow(rate=rate,maturity=maturity-grace_int,grace_amt = grace_amt-grace_int,grace_int=0)))
-  } else {
-    p <- maturity - grace_amt
-    k <- c(rep(x=0,times=grace_amt),rep(1/p,times=p))
-    krem <- c(1,1-cumsum(k))
-    i <- krem[-maturity]*rate
-    return (k+i)
-  }
+#' @param l The loan
+cashflow.german <- function(l) {  
+  k <- rep_len(1/l$maturity,l$maturity)
+  krem <- c(1,1-cumsum(k))
+  i <- head(krem,l$maturity)*l$rate
+  (k+i)*l$amt
 }
 
 #' Cashflow for a french loan
 #' 
 #' A french loan has a constant payment
 #' 
-#' @param rate The rate of the loan, as an effective periodic rate
-#' @param maturity The maturity of the loan
-frenchCashflow <- function(rate,maturity,grace_amt = 0,grace_int = 0) {
-  stopifnot(grace_int <= grace_amt)
-  stopifnot(grace_amt < maturity)
-  if (graceInt > 0) {
-    return (c(
-      rep(0,times=grace_int),
-      (1+rate)^grace_int*frenchCashflow(rate=rate,maturity=maturity-grace_int,grace_amt = grace_amt-grace_int,grace_int=0)))
-  } else {
-    p <- maturity - grace_amt
-    c(rep(rate,times=grace_amt),rep(rate / (1 - (1+rate)^(-p)),times=p))
-  }
+#' @param l The loan
+cashflow.french <- function(l) {  
+  rep_len(l$rate / (1 - (1+l$rate)^(-l$maturity)),l$maturity)*l$amt 
 }
 
 #' Value of a discounted cashflow
