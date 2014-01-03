@@ -29,7 +29,7 @@ swap_to_disc <- function(swap) {
 
 #' Converts a discount factor curve to a spot rate curve
 #' 
-#' @param fut The discount factor curve
+#' @param disc The discount factor curve
 #' @export
 disc_to_spot <- function(disc) {
   (1 / disc)^(1/(seq_along(disc)))-1

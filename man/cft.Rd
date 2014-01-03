@@ -7,13 +7,13 @@ cft(amt, maturity, rate, up_fee = 0, per_fee = 0)
 \arguments{
   \item{amt}{The amount of the loan}
 
-  \item{maturity}{}
+  \item{maturity}{The maturity of the loan}
 
   \item{rate}{The loan rate, in effective rate}
 
-  \item{upFee}{The fee that the loan taker pays upfront}
+  \item{up_fee}{The fee that the loan taker pays upfront}
 
-  \item{perFee}{The fee that the loan payer pays every
+  \item{per_fee}{The fee that the loan payer pays every
   period}
 }
 \description{

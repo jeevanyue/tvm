@@ -1,14 +1,12 @@
-#' @useDynLib tvm
-
 #' @title Adjusts the discount factors by a spread
 #' 
 #' @param fd vector of discount factors used to discount cashflows in \code{1:length(fd)} periods
-#' @param effective spread
+#' @param spread effective spread
 #' @export
 adjust_disc <- function(fd,spread) {
   zeros <- (1/fd)^(1/seq(along.with=fd))
   zeros_adj <- zeros + spread
-  1/(zeros_adj^(seq(along.with=zerosAdj)))
+  1/(zeros_adj^(seq(along.with=zeros_adj)))
 }
 
 #' Calculates the Total Financial Cost (CFT)
@@ -20,10 +18,10 @@ adjust_disc <- function(fd,spread) {
 #' The interest is calculated over amt + fee
 #' 
 #' @param amt The amount of the loan
-#' @param maturity
+#' @param maturity The maturity of the loan
 #' @param rate The loan rate, in  effective rate
-#' @param upFee The fee that the loan taker pays upfront
-#' @param perFee The fee that the loan payer pays every period
+#' @param up_fee The fee that the loan taker pays upfront
+#' @param per_fee The fee that the loan payer pays every period
 #' @export
 cft <- function(amt, maturity, rate, up_fee = 0, per_fee = 0) {
   full_amt <- amt + up_fee
@@ -57,7 +55,7 @@ irr <- function(cf, t=seq(from=0,by=1,along.with=cf)) { uniroot(npv, c(0,100000)
 #' @param rate The rate of the loan
 #' @export
 pmt <- function(amt, maturity, rate) {  
-  return(amt*tasa/(1-(1+rate)^(-maturity)))
+  return(amt*rate/(1-(1+rate)^(-maturity)))
 }
 
 #' The rate of a loan with constant payments (french type amortization)
@@ -67,6 +65,8 @@ pmt <- function(amt, maturity, rate) {
 #' @param amt The amount of the loan
 #' @param maturity The maturity of the loan
 #' @param pmt The payments of the loan
+#' @param extrema Vector of length 2 that has the minimum and maximum value to search for the rate
+#' @param tol The tolerance to use in the root finding algorithm
 #' @export
 rate <- function(amt, maturity, pmt, extrema=c(1e-4,1e9), tol=1e-4) {   
   zerome <- function(r) amt/pmt-(1-1/(1+r)^maturity)/r
