@@ -5,7 +5,7 @@
 fut_to_disc(fut)
 }
 \arguments{
-  \item{fut}{The futures curve}
+  \item{fut}{The futures curve. A vector.}
 }
 \description{
 Converts a futures curve to a discount factor curve

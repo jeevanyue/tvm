@@ -1,0 +1,3 @@
+The tvm packages aims to simplify financial calculations, involving loan payments and rates, and the transformation from discount factors to different rate types.
+
+Unless otherwise explicited, all rates inputted and outputted from the functions in the package are effective periodic rates. A rate curve is just a vector, where each value corresponds to a period. For example, rates[1] is the effective rate corresponding to the first period, and rates[10] would be the effective rate corresponding to the 10th period. Is up to you to decide if the periods are days, months, years or whatever. Take into account that this means that all periods have the same length.

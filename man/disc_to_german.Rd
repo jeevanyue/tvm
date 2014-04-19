@@ -5,7 +5,7 @@
 disc_to_german(disc)
 }
 \arguments{
-  \item{disc}{The discount factor curve}
+  \item{disc}{The discount factor curve.}
 }
 \description{
 Converts a discount factor curve to a german loan rate

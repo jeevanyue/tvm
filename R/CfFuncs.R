@@ -162,3 +162,22 @@ rem <- function(cf,amt,r) {
   s <- function(t) amt*(1+r)^t-sum(cf[1:t]*(1+r)^(t-(1:t)))
   vapply(X=seq_along(cf),FUN=s,FUN.VALUE=1)
 }
+
+#' Find the rate for a loan given the discount factors
+#' 
+#' Thru a root finding process, this function finds the rate that corresponds to a
+#' given set of discount factors, as to have the same present value
+#' 
+#' @param m The maturity of the loan
+#' @param d The discount factors
+#' @param loan_type One of the loan types
+#' @param interval The interval for the root finding process
+#' @param tol The tolerance for the root finding process
+#' @export
+find_rate <- function(m, d, loan_type, interval = c(1e-6, 2), tol = 1e-8) {
+  zerome <- function(r) {
+    l <- loan(rate = r, maturity = m, amt = 1, type = loan_type)
+    sum(d[seq_len(m)] * l$cf) - sum(l$cf / ((1 + r) ^ (seq_along(l$cf))))
+  }
+  uniroot(f = zerome, interval = interval, tol = tol)$root
+}

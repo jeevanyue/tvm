@@ -5,7 +5,7 @@
 fut_to_spot(fut)
 }
 \arguments{
-  \item{fut}{The futures curve}
+  \item{fut}{The futures curve.}
 }
 \description{
 Converts a futures curve to a spot curve

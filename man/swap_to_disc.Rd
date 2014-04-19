@@ -5,7 +5,7 @@
 swap_to_disc(swap)
 }
 \arguments{
-  \item{swap}{The swap curve}
+  \item{swap}{The swap curve.}
 }
 \description{
 Converts a swap curve to a discount factor curve

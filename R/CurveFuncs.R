@@ -1,6 +1,6 @@
 #' Converts a futures curve to a spot curve
 #' 
-#' @param fut The futures curve
+#' @param fut The futures curve.
 #' @export
 fut_to_spot <- function(fut) {
   (cumprod(1+fut))^(1/(seq_along(fut)))-1
@@ -8,7 +8,7 @@ fut_to_spot <- function(fut) {
 
 #' Converts a discount factor curve to a swap rate curve
 #' 
-#' @param disc The discount curve
+#' @param disc The discount curve.
 #' @export
 disc_to_swap <- function(disc) {
   (1-disc) / cumsum(disc)
@@ -16,7 +16,7 @@ disc_to_swap <- function(disc) {
 
 #' Converts a swap curve to a discount factor curve
 #' 
-#' @param swap The swap curve
+#' @param swap The swap curve.
 #' @export
 swap_to_disc <- function(swap) {
   d = swap
@@ -29,7 +29,7 @@ swap_to_disc <- function(swap) {
 
 #' Converts a discount factor curve to a spot rate curve
 #' 
-#' @param disc The discount factor curve
+#' @param disc The discount factor curve.
 #' @export
 disc_to_spot <- function(disc) {
   (1 / disc)^(1/(seq_along(disc)))-1
@@ -37,7 +37,7 @@ disc_to_spot <- function(disc) {
 
 #' Converts a spot curve to a futures curve
 #' 
-#' @param spot The spot curve
+#' @param spot The spot curve.
 #' @export
 spot_to_disc <- function(spot) {
   1 / ( (1 + spot)^(seq_along(spot)) )
@@ -45,7 +45,7 @@ spot_to_disc <- function(spot) {
 
 #' Converts a discount factor curve to a futures curve
 #' 
-#' @param disc The discount factor curve
+#' @param disc The discount factor curve.
 #' @export
 disc_to_fut <- function(disc) {  
   exp(-diff(log(c(1,disc))))-1  
@@ -53,7 +53,7 @@ disc_to_fut <- function(disc) {
 
 #' Converts a futures curve to a discount factor curve
 #' 
-#' @param fut The futures curve
+#' @param fut The futures curve. A vector.
 #' @export
 fut_to_disc <- function(fut) {
   1 / cumprod(1+fut)
@@ -61,7 +61,7 @@ fut_to_disc <- function(fut) {
 
 #' Converts a discount factor curve to a german loan rate curve
 #' 
-#' @param disc The discount factor curve
+#' @param disc The discount factor curve.
 #' @export
 disc_to_german <- function(disc) {
   vapply(
@@ -72,12 +72,15 @@ disc_to_german <- function(disc) {
 
 #' Converts a discount factor curve to a french loan rate curve
 #' 
-#' @param disc The discount factor curve
+#' @param disc The discount factor curve.
+#' @param search_interval A length 2 vector. The interval to use for the root finding algorithm.
+#' Your rates should be inside this interval.
+#' @param tol The tolerance for the root finding algorithm.
 #' @export
-disc_to_french <- function(disc) {  
+disc_to_french <- function(disc, search_interval = c(0.0001,1), tol = 1e-8) {  
   zerome = function(r,i,disc) 1/r * ( 1 - (1+r)^(-i) ) - sum(disc[1:i])
   vapply(
     1:length(disc),
-    function(i) uniroot(function(r) zerome(r,i,disc),c(0.0001,1))$root,
+    function(i) uniroot(function(r) zerome(r,i,disc), interval = search_interval, tol = tol)$root,
     1)
 }

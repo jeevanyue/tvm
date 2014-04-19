@@ -5,7 +5,7 @@
 spot_to_disc(spot)
 }
 \arguments{
-  \item{spot}{The spot curve}
+  \item{spot}{The spot curve.}
 }
 \description{
 Converts a spot curve to a futures curve

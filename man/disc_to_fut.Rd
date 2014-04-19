@@ -5,7 +5,7 @@
 disc_to_fut(disc)
 }
 \arguments{
-  \item{disc}{The discount factor curve}
+  \item{disc}{The discount factor curve.}
 }
 \description{
 Converts a discount factor curve to a futures curve
