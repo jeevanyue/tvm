@@ -84,3 +84,19 @@ disc_to_french <- function(disc, search_interval = c(0.0001,1), tol = 1e-8) {
     function(i) uniroot(function(r) zerome(r,i,disc), interval = search_interval, tol = tol)$root,
     1)
 }
+
+#' Converts an effective rate into a direct rate
+#' 
+#' @param r The effective rate
+#' @export
+eff_to_dir <- function(r) {
+  (1 + r) ^ seq_along(r) - 1
+}
+
+#' Converts a direct rate into an effective rate
+#' 
+#' @param r The direct rate
+#' @export
+dir_to_eff <- function(r) {
+  (1 + r) ^ (1 / seq_along(r)) - 1
+}
