@@ -6,3 +6,4 @@ Author: Juan  Manuel Truppia
 Maintainer: Juan Manuel Truppia <jmtruppia@gmail.com>
 Description: Functions for managing cashflows and interest rate curves
 License: MIT + file LICENSE
+Suggests: testthat
