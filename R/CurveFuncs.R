@@ -100,3 +100,37 @@ eff_to_dir <- function(r) {
 dir_to_eff <- function(r) {
   (1 + r) ^ (1 / seq_along(r)) - 1
 }
+
+#' Creates a rate curve instance
+#' @param fun_d A discount factor function. fun_d(x) returns the discount factor for time x
+#' @param fun_r A rate function. fun_r(x) returns the EPR for time x
+#' @param rate_type The rate type. Must be on of c("french","fut","german","spot","swap")
+#' @param knots The nodes to bootstrap the rates
+#' @export
+rate_curve <- function(fun_d = NULL, fun_r = NULL, rate_type = NULL, knots) {
+  if (!(!is.null(fun_d) || (!is.null(fun_r) & !is.null(r_type))))
+    stop("A rate or discount function must be given to create a rate_curve")
+  if (is.null(fun_d)) {
+    y <- do.call(what = paste0(r_type,"_to_disc"), args = list(fun_r(knots)))
+    f <- approxfun(x = knots, y = y, method = "linear", rule = 2)
+  }
+  else {
+    f <- fun_d
+  }
+  r <- structure(list(), class = "rate_curve")
+  r$f <- f
+  r$knots <- knots
+  r
+}
+
+#' Returns a function f such that f(x) is the rate of type rate_type for time x
+#' @param r A rate curve object
+#' @param type The rate type
+#' @export
+get_rate_fun <- function(r, rate_type) {
+  stopifnot(type %in% c("french","fut","german","spot","swap"))
+  x <- (r$f)(r$knots)
+  do.call(what = paste0("disc_to_",rate_type), args = list(x))
+}
+
+# TODO: Add a subsetting operator to get specific rates or discount factors maybe?
