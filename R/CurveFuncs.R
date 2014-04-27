@@ -165,7 +165,7 @@ get_rate_fun <- function(r, rate_type = "spot") {
 #' Else, it returns the rates of \code{rate_type} type and corresponding to time \code{x}
 #' @method [ rate_curve
 #' @export
-`[.rate_curve` <- function(r,x = NULL,rate_type = "spot") {
+`[.rate_curve` <- function(r, rate_type = "spot", x = NULL) {
   f <- get_rate_fun(r = r, rate_type = rate_type)
   if(is.null(x))
     f
@@ -182,7 +182,7 @@ get_rate_fun <- function(r, rate_type = "spot") {
 plot.rate_curve <- function(r, rate_types = c("french","fut","german","spot","swap")) {
   df <- as.data.frame(lapply(
     X = rate_types,
-    FUN = function(x)  r[r$knots, x]
+    FUN = function(x)  r[x, r$knots]
     ))
   names(df) <- rate_types
   df$Time = r$knots    
