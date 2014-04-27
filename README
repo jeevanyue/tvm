@@ -1,3 +1,16 @@
-The tvm packages aims to simplify financial calculations, involving loan payments and rates, and the transformation from discount factors to different rate types.
+The tvm package aims to simplify financial calculations, involving loan payments and rates, and the transformation from discount factors to different rate types.
 
-Unless otherwise explicited, all rates inputted and outputted from the functions in the package are effective periodic rates. A rate curve is just a vector, where each value corresponds to a period. For example, rates[1] is the effective rate corresponding to the first period, and rates[10] would be the effective rate corresponding to the 10th period. Is up to you to decide if the periods are days, months, years or whatever. Take into account that this means that all periods have the same length.
+It has two sections.
+
+The first one deals with fixed equal payment loans. There you have functions similar to PMT, RATE, etc from Excel.
+
+The second one deals with rate curves and different rates for different loan structures. A rate curve is a S3 class, based on a list which has 2 components: a discount factor function $f, and a numeric vector $knots, which corresponds to the points of the curve where the bootstrapping between the different rate types is done.
+
+The different rate types used are
+- spot (zero rates)
+- futures
+- swap (bullet rates)
+- french (french type loans)
+- german (german type loans)
+
+You create a rate curve with the constructor, and the use subsetting to get functions for the different loan structures.
