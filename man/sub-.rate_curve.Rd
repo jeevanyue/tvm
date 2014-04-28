@@ -2,7 +2,7 @@
 \alias{[.rate_curve}
 \title{Returns a particular rate or rates from a curve}
 \usage{
-\method{[}{rate_curve}(r, x = NULL, rate_type = "spot")
+\method{[}{rate_curve}(r, rate_type = "zero", x = NULL)
 }
 \arguments{
   \item{r}{The rate_curve object}
@@ -18,5 +18,10 @@ If \code{x} is \code{NULL}, then returns a rate function of
 }
 \description{
 Returns a particular rate or rates from a curve
+}
+\examples{
+r <- rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero")
+r["zero"]
+r["swap",c(1.5, 2)]
 }
 

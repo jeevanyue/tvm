@@ -7,7 +7,7 @@ find_rate(m, d, loan_type, interval = c(1e-06, 2), tol = 1e-08)
 \arguments{
   \item{m}{The maturity of the loan}
 
-  \item{d}{The discount factors}
+  \item{d}{The discount factor vector}
 
   \item{loan_type}{One of the loan types}
 
@@ -18,7 +18,11 @@ find_rate(m, d, loan_type, interval = c(1e-06, 2), tol = 1e-08)
 }
 \description{
 Thru a root finding process, this function finds the rate
-that corresponds to a given set of discount factors, as to
-have the same present value
+that corresponds to a given set of discount factors, as for
+the loan to have the same present value discounted with the
+discount factors or with that constant rate
+}
+\examples{
+find_rate(m = 3, d = c(0.99, 0.98, 0.97), loan_type = "bullet")
 }
 

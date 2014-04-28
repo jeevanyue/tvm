@@ -1,25 +1,14 @@
 #' @import ggplot2
+#' @import reshape2
 
-#' @title Converts a futures curve to a spot curve
-#' 
-#' @param fut The futures curve.
-#' @export
-fut_to_spot <- function(fut) {
+fut_to_zero <- function(fut) {
   (cumprod(1+fut))^(1/(seq_along(fut)))-1
 }
 
-#' @title Converts a discount factor curve to a swap rate curve
-#' 
-#' @param disc The discount curve.
-#' @export
 disc_to_swap <- function(disc) {
   (1-disc) / cumsum(disc)
 }
 
-#' @title Converts a swap curve to a discount factor curve
-#' 
-#' @param swap The swap curve.
-#' @export
 swap_to_disc <- function(swap) {
   d = swap
   d[1] = 1 / (1 + swap[1])
@@ -29,42 +18,22 @@ swap_to_disc <- function(swap) {
   d
 }
 
-#' @title Converts a discount factor curve to a spot rate curve
-#' 
-#' @param disc The discount factor curve.
-#' @export
-disc_to_spot <- function(disc) {
+disc_to_zero <- function(disc) {
   (1 / disc)^(1/(seq_along(disc)))-1
 }
 
-#' Converts a spot curve to a futures curve
-#' 
-#' @param spot The spot curve.
-#' @export
-spot_to_disc <- function(spot) {
-  1 / ( (1 + spot)^(seq_along(spot)) )
+zero_to_disc <- function(zero) {
+  1 / ( (1 + zero)^(seq_along(zero)) )
 }
 
-#' @title Converts a discount factor curve to a futures curve
-#' 
-#' @param disc The discount factor curve.
-#' @export
 disc_to_fut <- function(disc) {  
   exp(-diff(log(c(1,disc))))-1  
 }
 
-#' @title Converts a futures curve to a discount factor curve
-#' 
-#' @param fut The futures curve. A vector.
-#' @export
 fut_to_disc <- function(fut) {
   1 / cumprod(1+fut)
 }
 
-#' @title Converts a discount factor curve to a german loan rate curve
-#' 
-#' @param disc The discount factor curve.
-#' @export
 disc_to_german <- function(disc) {
   vapply(
     1:length(disc),
@@ -72,13 +41,6 @@ disc_to_german <- function(disc) {
     1)  
 }
 
-#' @title Converts a discount factor curve to a french loan rate curve
-#' 
-#' @param disc The discount factor curve.
-#' @param search_interval A length 2 vector. The interval to use for the root finding algorithm.
-#' Your rates should be inside this interval.
-#' @param tol The tolerance for the root finding algorithm.
-#' @export
 disc_to_french <- function(disc, search_interval = c(0.0001,1), tol = 1e-8) {  
   zerome = function(r,i,disc) 1/r * ( 1 - (1+r)^(-i) ) - sum(disc[1:i])
   vapply(
@@ -87,18 +49,10 @@ disc_to_french <- function(disc, search_interval = c(0.0001,1), tol = 1e-8) {
     1)
 }
 
-#' @title Converts an effective rate into a direct rate
-#' 
-#' @param r The effective rate
-#' @export
 eff_to_dir <- function(r) {
   (1 + r) ^ seq_along(r) - 1
 }
 
-#' @title Converts a direct rate into an effective rate
-#' 
-#' @param r The direct rate
-#' @export
 dir_to_eff <- function(r) {
   (1 + r) ^ (1 / seq_along(r)) - 1
 }
@@ -106,15 +60,26 @@ dir_to_eff <- function(r) {
 #' @title Creates a rate curve instance
 #' 
 #' @param rates A rate vector
-#' @param rate_type The rate type. Must be on of c("french","fut","german","spot","swap")
+#' @param rate_type The rate type. Must be on of c("fut","zero","swap")
 #' @param pers The periods the rates correspond to
-#' @param fun_d A discount factor function. fun_d(x) returns the discount factor for time x
-#' @param fun_r A rate function. fun_r(x) returns the EPR for time x
+#' @param fun_d A discount factor function. fun_d(x) returns the discount factor for time x, vectorized on x
+#' @param fun_r A rate function. fun_r(x) returns the EPR for time x, vectorized on x
 #' @param knots The nodes used to bootstrap the rates
+#' 
+#' @note Currently a rate curve can only be built from one of the following sources
+#' \enumerate{
+#' \item A discount factor function
+#' \item A rate function and a rate type from the following types: "fut", "zero" or "swap"
+#' \item A rate vector, a pers vector and a rate type as before
+#' }
+#' @examples
+#' rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero")
+#' rate_curve(fun_r = function(x) rep_len(0.1, length(x)), rate_type = "swap")
+#' rate_curve(fun_d = function(x) 1 / (1 + x))
 #' @export
 rate_curve <- function(
   rates = NULL,
-  rate_type = "spot",
+  rate_type = "zero",
   pers = 1:length(rates),
   fun_d = NULL,
   fun_r = NULL,
@@ -143,13 +108,8 @@ rate_curve <- function(
   }  
 }
 
-#' @title Returns a function f such that f(x) is the rate of type rate_type for time x
-#' 
-#' @param r A rate curve object
-#' @param type The rate type
-#' @export
-get_rate_fun <- function(r, rate_type = "spot") {
-  stopifnot(rate_type %in% c("french","fut","german","spot","swap"))
+get_rate_fun <- function(r, rate_type = "zero") {
+  stopifnot(rate_type %in% c("french","fut","german","zero","swap"))
   d <- (r$f)(r$knots)
   y <- do.call(what = paste0("disc_to_",rate_type), args = list(d))
   approxfun(x = r$knots, y = y, method = "linear", rule = 2)
@@ -163,9 +123,12 @@ get_rate_fun <- function(r, rate_type = "spot") {
 #' 
 #' @return If \code{x} is \code{NULL}, then returns a rate function of \code{rate_type} type.
 #' Else, it returns the rates of \code{rate_type} type and corresponding to time \code{x}
-#' @method [ rate_curve
+#' @examples
+#' r <- rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero")
+#' r["zero"]
+#' r["swap",c(1.5, 2)]
 #' @export
-`[.rate_curve` <- function(r, rate_type = "spot", x = NULL) {
+`[.rate_curve` <- function(r, rate_type = "zero", x = NULL) {
   f <- get_rate_fun(r = r, rate_type = rate_type)
   if(is.null(x))
     f
@@ -175,17 +138,31 @@ get_rate_fun <- function(r, rate_type = "spot") {
 
 #' @title Plots a rate curve
 #' 
-#' @param r The rate curve
-#' @param rate_types The rate types to plot
-#' @method plot rate_curve
+#' @param x The rate curve
+#' @param rate_type The rate types to plot, in c("french","fut","german","zero","swap")
+#' @param ... Other arguments (unused)
+#' @examples
+#' r <- rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero")
+#' plot(r)
+#' \dontrun{
+#' plot(r, rate_type = "german")
+#' plot(r, rate_type = c("french", "german"))
+#' }
 #' @export
-plot.rate_curve <- function(r, rate_types = c("french","fut","german","spot","swap")) {
+plot.rate_curve <- function(x, rate_type = NULL, ...) {
+  all_rate_types = c("french","fut","german","zero","swap")
+  if (is.null(rate_type)) {
+    rate_type = all_rate_types
+  }
+  if (any(!(rate_type %in% all_rate_types))) {
+    stop("The rate type is not recognized")
+  }
   df <- as.data.frame(lapply(
-    X = rate_types,
-    FUN = function(x)  r[x, r$knots]
+    X = rate_type,
+    FUN = function(z)  x[z, x$knots]
     ))
-  names(df) <- rate_types
-  df$Time = r$knots    
+  names(df) <- rate_type
+  df$Time = x$knots    
   dfm <- reshape2::melt(data = df, id.vars = "Time", variable.name = "RateType", value.name = "Rate")
   ggplot2::ggplot(data = dfm) +
     ggplot2::geom_line(mapping = ggplot2::aes_string(x = "Time", y = "Rate", color = "RateType"))
