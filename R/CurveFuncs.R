@@ -13,7 +13,7 @@ swap_to_disc <- function(swap) {
   d = swap
   d[1] = 1 / (1 + swap[1])
   for (j in 2:length(swap)) {
-    d[j] = (1 - sum(d[1:(j-1)])*swap[j]) / (1 + swap[j])
+    d[j] = max((1 - sum(d[1:(j-1)])*swap[j]) / (1 + swap[j]), 0)
   }
   d
 }
@@ -97,8 +97,7 @@ rate_curve <- function(
     r
   } else if (!is.null(fun_r)) {
     d <- do.call(what = paste0(rate_type,"_to_disc"), args = list(fun_r(knots)))
-    log_f <- approxfun(x = knots, y = log(d), method = "linear", rule = 2)
-    f <- function(x) exp(log_f(x))
+    f <- approxfun(x = knots, y = d, method = "linear", rule = 2)    
     rate_curve(fun_d = f, knots = knots)
   } else if (!is.null(rates)) {
     f <- approxfun(x = pers, y = rates, method = "linear", rule = 2)
