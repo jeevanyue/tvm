@@ -7,7 +7,7 @@ The first one deals with fixed equal payment loans. There you have functions sim
 The second one deals with rate curves and different rates for different loan structures. A rate curve is a S3 class, based on a list which has 2 components: a discount factor function $f, and a numeric vector $knots, which corresponds to the points of the curve where the bootstrapping between the different rate types is done.
 
 The different rate types used are
-- zero (spot rates)
+- zero (spot rates) in effective and nominal form (effective are compounded, nominal are linear)
 - fut (futures rate)
 - swap (bullet rates)
 - french (french type loans)

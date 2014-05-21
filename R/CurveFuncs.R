@@ -1,7 +1,7 @@
 #' @import ggplot2
 #' @import reshape2
 
-fut_to_zero <- function(fut) {
+fut_to_zero_eff <- function(fut) {
   (cumprod(1+fut))^(1/(seq_along(fut)))-1
 }
 
@@ -18,12 +18,20 @@ swap_to_disc <- function(swap) {
   d
 }
 
-disc_to_zero <- function(disc) {
+disc_to_zero_eff <- function(disc) {
   (1 / disc)^(1/(seq_along(disc)))-1
 }
 
-zero_to_disc <- function(zero) {
+zero_eff_to_disc <- function(zero) {
   1 / ( (1 + zero)^(seq_along(zero)) )
+}
+
+disc_to_zero_nom <- function(disc) {
+  (1 / disc - 1) / seq_along(disc)
+}
+
+zero_nom_to_disc <- function(zero) {
+  1 / (1 + zero * seq_along(zero))
 }
 
 disc_to_fut <- function(disc) {  
@@ -60,7 +68,7 @@ dir_to_eff <- function(r) {
 #' @title Creates a rate curve instance
 #' 
 #' @param rates A rate vector
-#' @param rate_type The rate type. Must be on of c("fut","zero","swap")
+#' @param rate_type The rate type. Must be on of c("fut", "zero_nom", "zero_eff", "swap")
 #' @param pers The periods the rates correspond to
 #' @param fun_d A discount factor function. fun_d(x) returns the discount factor for time x, vectorized on x
 #' @param fun_r A rate function. fun_r(x) returns the EPR for time x, vectorized on x
@@ -69,17 +77,17 @@ dir_to_eff <- function(r) {
 #' @note Currently a rate curve can only be built from one of the following sources
 #' \enumerate{
 #' \item A discount factor function
-#' \item A rate function and a rate type from the following types: "fut", "zero" or "swap"
+#' \item A rate function and a rate type from the following types: "fut", "zero_nom", "zero_eff" or "swap"
 #' \item A rate vector, a pers vector and a rate type as before
 #' }
 #' @examples
-#' rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero")
+#' rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero_eff")
 #' rate_curve(fun_r = function(x) rep_len(0.1, length(x)), rate_type = "swap")
 #' rate_curve(fun_d = function(x) 1 / (1 + x))
 #' @export
 rate_curve <- function(
   rates = NULL,
-  rate_type = "zero",
+  rate_type = "zero_eff",
   pers = 1:length(rates),
   fun_d = NULL,
   fun_r = NULL,
@@ -107,8 +115,8 @@ rate_curve <- function(
   }  
 }
 
-get_rate_fun <- function(r, rate_type = "zero") {
-  stopifnot(rate_type %in% c("french","fut","german","zero","swap"))
+get_rate_fun <- function(r, rate_type = "zero_eff") {
+  stopifnot(rate_type %in% c("french","fut","german","zero_eff","zero_nom","swap"))
   d <- (r$f)(r$knots)
   y <- do.call(what = paste0("disc_to_",rate_type), args = list(d))
   approxfun(x = r$knots, y = y, method = "linear", rule = 2)
@@ -123,11 +131,11 @@ get_rate_fun <- function(r, rate_type = "zero") {
 #' @return If \code{x} is \code{NULL}, then returns a rate function of \code{rate_type} type.
 #' Else, it returns the rates of \code{rate_type} type and corresponding to time \code{x}
 #' @examples
-#' r <- rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero")
-#' r["zero"]
+#' r <- rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero_eff")
+#' r["zero_eff"]
 #' r["swap",c(1.5, 2)]
 #' @export
-`[.rate_curve` <- function(r, rate_type = "zero", x = NULL) {
+`[.rate_curve` <- function(r, rate_type = "zero_eff", x = NULL) {
   f <- get_rate_fun(r = r, rate_type = rate_type)
   if(is.null(x))
     f
@@ -138,10 +146,10 @@ get_rate_fun <- function(r, rate_type = "zero") {
 #' @title Plots a rate curve
 #' 
 #' @param x The rate curve
-#' @param rate_type The rate types to plot, in c("french","fut","german","zero","swap")
+#' @param rate_type The rate types to plot, in c("french","fut","german","zero_eff","zero_nom","swap")
 #' @param ... Other arguments (unused)
 #' @examples
-#' r <- rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero")
+#' r <- rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero_eff")
 #' plot(r)
 #' \dontrun{
 #' plot(r, rate_type = "german")
@@ -149,7 +157,7 @@ get_rate_fun <- function(r, rate_type = "zero") {
 #' }
 #' @export
 plot.rate_curve <- function(x, rate_type = NULL, ...) {
-  all_rate_types = c("french","fut","german","zero","swap")
+  all_rate_types = c("french","fut","german","zero_eff","zero_nom","swap")
   if (is.null(rate_type)) {
     rate_type = all_rate_types
   }
