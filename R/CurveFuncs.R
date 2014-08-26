@@ -93,7 +93,7 @@ rate_curve <- function(
   fun_d = NULL,
   fun_r = NULL,
   knots = seq.int(from = 1, to = max(pers), by = 1),
-  functor = function (x, y) splinefun(x = x, y = y, method = "natural")) {
+  functor = function (x, y) splinefun(x = x, y = y, method = "monoH.FC")) {
   if (!(
     (!is.null(fun_d) &&  !is.null(knots)) ||
       (!is.null(fun_r) && !is.null(rate_type) && !is.null(knots)) ||
