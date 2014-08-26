@@ -4,7 +4,8 @@
 \title{Creates a rate curve instance}
 \usage{
 rate_curve(rates = NULL, rate_type = "zero_eff", pers = 1:length(rates),
-  fun_d = NULL, fun_r = NULL, knots = 1:length(rates))
+  fun_d = NULL, fun_r = NULL, knots = seq.int(from = 1, to = max(pers), by
+  = 1), functor = function(x, y) splinefun(x = x, y = y, method = "natural"))
 }
 \arguments{
 \item{rates}{A rate vector}
@@ -18,6 +19,8 @@ rate_curve(rates = NULL, rate_type = "zero_eff", pers = 1:length(rates),
 \item{fun_r}{A rate function. fun_r(x) returns the EPR for time x, vectorized on x}
 
 \item{knots}{The nodes used to bootstrap the rates}
+
+\item{functor}{A function with parameters x and y, that returns a function used to interpolate}
 }
 \description{
 Creates a rate curve instance

@@ -73,6 +73,7 @@ dir_to_eff <- function(r) {
 #' @param fun_d A discount factor function. fun_d(x) returns the discount factor for time x, vectorized on x
 #' @param fun_r A rate function. fun_r(x) returns the EPR for time x, vectorized on x
 #' @param knots The nodes used to bootstrap the rates
+#' @param functor A function with parameters x and y, that returns a function used to interpolate
 #' 
 #' @note Currently a rate curve can only be built from one of the following sources
 #' \enumerate{
@@ -91,7 +92,8 @@ rate_curve <- function(
   pers = 1:length(rates),
   fun_d = NULL,
   fun_r = NULL,
-  knots = 1:length(rates)) {
+  knots = seq.int(from = 1, to = max(pers), by = 1),
+  functor = function (x, y) splinefun(x = x, y = y, method = "natural")) {
   if (!(
     (!is.null(fun_d) &&  !is.null(knots)) ||
       (!is.null(fun_r) && !is.null(rate_type) && !is.null(knots)) ||
@@ -102,14 +104,15 @@ rate_curve <- function(
     r <- structure(list(), class = "rate_curve")
     r$f <- fun_d
     r$knots <- knots
+    r$functor <- functor
     r
   } else if (!is.null(fun_r)) {
     d <- do.call(what = paste0(rate_type,"_to_disc"), args = list(fun_r(knots)))
-    f <- approxfun(x = knots, y = d, method = "linear", rule = 2)    
-    rate_curve(fun_d = f, knots = knots)
+    f <- functor(x = knots, y = d)    
+    rate_curve(fun_d = f, knots = knots, functor = functor)
   } else if (!is.null(rates)) {
-    f <- approxfun(x = pers, y = rates, method = "linear", rule = 2)
-    rate_curve(fun_r = f, rate_type = rate_type, knots = knots)
+    f <- functor(x = pers, y = rates)
+    rate_curve(fun_r = f, rate_type = rate_type, knots = knots, functor = functor)
   } else {
     stop("The rate_curve constructor lacks arguments")
   }  
@@ -119,7 +122,7 @@ get_rate_fun <- function(r, rate_type = "zero_eff") {
   stopifnot(rate_type %in% c("french","fut","german","zero_eff","zero_nom","swap"))
   d <- (r$f)(r$knots)
   y <- do.call(what = paste0("disc_to_",rate_type), args = list(d))
-  approxfun(x = r$knots, y = y, method = "linear", rule = 2)
+  r$functor(x = r$knots, y = y)
 }
 
 #' @title Returns a particular rate or rates from a curve
