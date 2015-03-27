@@ -33,27 +33,54 @@ cft <- function(amt, maturity, rate, up_fee = 0, per_fee = 0) {
   rate(amt = amt, maturity = maturity, pmt = p + per_fee)
 }
 
-#' @title Net Present Value of a cashflow (NPV)
+#' @title Net Present Value of a periodic cashflow (NPV)
 #'  
 #' @param i The rate used to discount the cashflow. It must be effective and with a periodicity that matches that of the cashflow
 #' @param cf The cashflow
-#' @param ts The times on which the cashflow ocurrs. It is assumed that \code{cf[idx]} happens at moment \code{t[idx]}
+#' @param ts The times on which the cashflow ocurrs. It is assumed that \code{cf[idx]} happens at moment \code{ts[idx]}. If empty, assumes that \code{cf[idx]} happens at period \code{idx - 1}
+#' 
+#' @return The net present value at
+#' 
 #' @examples
 #' npv(i = 0.01, cf = c(-1, 0.5, 0.9), ts = c(0, 1, 3))
 #' @export
 npv <- function(i, cf, ts = seq(from = 0, by = 1, along.with = cf)) sum(cf / (1+i) ^ ts)
 
-#' Internal Rate of Return of a cashflow (IRR)
+#' @title Net Present Value of an irregular cashflow (NPV)
+#'  
+#' @param i The rate used to discount the cashflow. It must be an effective anual rate (EAR)
+#' @param cf The cashflow
+#' @param d The dates when each cashflow occurs. Same length as the cashflow
+#' @examples
+#' npv(i = 0.01, cf = c(-1, 0.5, 0.9), d = as.Date(c("2015-01-01", "2015-02-15", "2015-04-10")))
+#' @export
+xnpv <- function(i, cf, d) sum(cf / ((1+i) ^ (as.integer(d - d[1]) / 365)))
+
+#' Internal Rate of Return of a periodic cashflow (IRR)
 #' 
 #' @title The IRR is returned as an effective rate with periodicity equal to that of the cashflow
 #' 
 #' @param cf The cashflow
-#' @param ts The times on which the cashflow ocurrs. It is assumed that \code{cf[idx]} happens at moment \code{t[idx]}
+#' @param ts The times on which the cashflow ocurrs. It is assumed that \code{cf[idx]} happens at moment \code{ts[idx]}
 #' @param interval A length 2 vector that indicates the root finding algorithm where to search for the irr
+#' @param ... Other arguments to be passed on to uniroot
 #' @examples
 #' irr(cf = c(-1, 0.5, 0.9), ts = c(0, 1, 3))
 #' @export
-irr <- function(cf, ts = seq(from = 0, by = 1, along.with = cf), interval = c(0, 100000)) { uniroot(npv, interval = interval, cf = cf, ts = ts)$root }
+irr <- function(cf, ts = seq(from = 0, by = 1, along.with = cf), interval = c(-1, 10), ...) { uniroot(npv, interval = interval, cf = cf, ts = ts, extendInt = "yes", ...)$root }
+
+#' Internal Rate of Return of an irregular cashflow (IRR)
+#' 
+#' @title The IRR is returned as an effective anual rate
+#' 
+#' @param cf The cashflow
+#' @param d The dates when each cashflow occurs. Same length as the cashflow
+#' @param interval A length 2 vector that indicates the root finding algorithm where to search for the irr
+#' @param ... Other arguments to be passed on to uniroot
+#' @examples
+#' xirr(cf = c(-1, 1.5), d = Sys.Date() + c(0, 365))
+#' @export
+xirr <- function(cf, d, interval = c(-1, 10), ...) { uniroot(xnpv, interval = interval, cf = cf, d = d, extendInt = "yes", ...)$root }
 
 #' @title The value of the payment of a loan with constant payments (french type amortization)
 #' 
