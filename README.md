@@ -26,10 +26,10 @@ l <- loan(rate = 0.05, maturity = 10, amt = 100, type = "bullet")
 cashflow(l)
 # Build a rate curve from different inputs
 rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero_eff")
-rate_curve(fun_r = function(x) rep_len(0.1, length(x)), rate_type = "swap")
-rate_curve(fun_d = function(x) 1 / (1 + x))
+rate_curve(fun_r = function(x) rep_len(0.1, length(x)), rate_type = "swap", knots = 1:10)
+rate_curve(fun_d = function(x) 1 / (1 + x), knots = 1:10)
 # Subset a rate curve, maybe transforming it to another rate type
-r <- rate_curve(fun_d = function(x) 1 / (1 + x))
+r <- rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero_eff")
 r["zero_eff"]
 r["swap",c(1.5, 2)]
 # Plot a rate curve
