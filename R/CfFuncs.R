@@ -52,7 +52,7 @@ npv <- function(i, cf, ts = seq(from = 0, by = 1, along.with = cf)) sum(cf / (1+
 #' @param cf The cashflow
 #' @param d The dates when each cashflow occurs. Same length as the cashflow
 #' @examples
-#' npv(i = 0.01, cf = c(-1, 0.5, 0.9), d = as.Date(c("2015-01-01", "2015-02-15", "2015-04-10")))
+#' xnpv(i = 0.01, cf = c(-1, 0.5, 0.9), d = as.Date(c("2015-01-01", "2015-02-15", "2015-04-10")))
 #' @export
 xnpv <- function(i, cf, d) sum(cf / ((1+i) ^ (as.integer(d - d[1]) / 365)))
 
