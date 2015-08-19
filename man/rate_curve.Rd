@@ -19,7 +19,7 @@ rate_curve(rates = NULL, rate_type = "zero_eff", pers = 1:length(rates),
 
 \item{fun_r}{A rate function. fun_r(x) returns the EPR for time x, vectorized on x}
 
-\item{knots}{The nodes used to bootstrap the rates}
+\item{knots}{The nodes used to bootstrap the rates. This is a mandatory argument if a rate function or discount function is provided}
 
 \item{functor}{A function with parameters x and y, that returns a function used to interpolate}
 }
@@ -36,7 +36,7 @@ Currently a rate curve can only be built from one of the following sources
 }
 \examples{
 rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero_eff")
-rate_curve(fun_r = function(x) rep_len(0.1, length(x)), rate_type = "swap")
-rate_curve(fun_d = function(x) 1 / (1 + x))
+rate_curve(fun_r = function(x) rep_len(0.1, length(x)), rate_type = "swap", knots = 1:12)
+rate_curve(fun_d = function(x) 1 / (1 + x), knots = 1:12)
 }
 

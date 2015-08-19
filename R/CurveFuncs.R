@@ -2,28 +2,28 @@
 #' @import reshape2
 
 fut_to_zero_eff <- function(fut) {
-  (cumprod(1+fut))^(1/(seq_along(fut)))-1
+  (cumprod(1 + fut)) ^ (1 / (seq_along(fut))) - 1
 }
 
 disc_to_swap <- function(disc) {
-  (1-disc) / cumsum(disc)
+  (1 - disc) / cumsum(disc)
 }
 
 swap_to_disc <- function(swap) {
   d = swap
   d[1] = 1 / (1 + swap[1])
   for (j in 2:length(swap)) {
-    d[j] = max((1 - sum(d[1:(j-1)])*swap[j]) / (1 + swap[j]), 0)
+    d[j] = max((1 - sum(d[1:(j - 1)])*swap[j]) / (1 + swap[j]), 0)
   }
   d
 }
 
 disc_to_zero_eff <- function(disc) {
-  (1 / disc)^(1/(seq_along(disc)))-1
+  (1 / disc) ^ (1 / (seq_along(disc))) - 1
 }
 
 zero_eff_to_disc <- function(zero) {
-  1 / ( (1 + zero)^(seq_along(zero)) )
+  1 / ((1 + zero) ^ (seq_along(zero)) )
 }
 
 disc_to_zero_nom <- function(disc) {
@@ -35,22 +35,22 @@ zero_nom_to_disc <- function(zero) {
 }
 
 disc_to_fut <- function(disc) {  
-  exp(-diff(log(c(1,disc))))-1  
+  exp(-diff(log(c(1,disc)))) - 1  
 }
 
 fut_to_disc <- function(fut) {
-  1 / cumprod(1+fut)
+  1 / cumprod(1 + fut)
 }
 
 disc_to_german <- function(disc) {
   vapply(
     1:length(disc),
-    function(i) ( 1 - 1 / i * sum(disc[1:i]) ) / sum( disc[1:i] * (1 - ( 1:i - 1 ) / i ) ),
+    function(i) (1 - 1 / i * sum(disc[1:i]) ) / sum( disc[1:i] * (1 - (1:i - 1 ) / i ) ),
     1)  
 }
 
 disc_to_french <- function(disc, search_interval = c(0.0001,1), tol = 1e-8) {  
-  zerome = function(r,i,disc) 1/r * ( 1 - (1+r)^(-i) ) - sum(disc[1:i])
+  zerome = function(r,i,disc) 1/r * (1 - (1 + r) ^ (-i) ) - sum(disc[1:i])
   vapply(
     1:length(disc),
     function(i) uniroot(function(r) zerome(r,i,disc), interval = search_interval, tol = tol)$root,
@@ -72,7 +72,7 @@ dir_to_eff <- function(r) {
 #' @param pers The periods the rates correspond to
 #' @param fun_d A discount factor function. fun_d(x) returns the discount factor for time x, vectorized on x
 #' @param fun_r A rate function. fun_r(x) returns the EPR for time x, vectorized on x
-#' @param knots The nodes used to bootstrap the rates
+#' @param knots The nodes used to bootstrap the rates. This is a mandatory argument if a rate function or discount function is provided
 #' @param functor A function with parameters x and y, that returns a function used to interpolate
 #' 
 #' @note Currently a rate curve can only be built from one of the following sources
@@ -83,8 +83,8 @@ dir_to_eff <- function(r) {
 #' }
 #' @examples
 #' rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero_eff")
-#' rate_curve(fun_r = function(x) rep_len(0.1, length(x)), rate_type = "swap")
-#' rate_curve(fun_d = function(x) 1 / (1 + x))
+#' rate_curve(fun_r = function(x) rep_len(0.1, length(x)), rate_type = "swap", knots = 1:12)
+#' rate_curve(fun_d = function(x) 1 / (1 + x), knots = 1:12)
 #' @export
 rate_curve <- function(
   rates = NULL,
@@ -93,7 +93,7 @@ rate_curve <- function(
   fun_d = NULL,
   fun_r = NULL,
   knots = seq.int(from = 1, to = max(pers), by = 1),
-  functor = function (x, y) splinefun(x = x, y = y, method = "monoH.FC")) {
+  functor = function(x, y) splinefun(x = x, y = y, method = "monoH.FC")) {
   if (!(
     (!is.null(fun_d) &&  !is.null(knots)) ||
       (!is.null(fun_r) && !is.null(rate_type) && !is.null(knots)) ||
@@ -140,7 +140,7 @@ get_rate_fun <- function(r, rate_type = "zero_eff") {
 #' @export
 `[.rate_curve` <- function(r, rate_type = "zero_eff", x = NULL) {
   f <- get_rate_fun(r = r, rate_type = rate_type)
-  if(is.null(x))
+  if (is.null(x))
     f
   else
     f(x)
