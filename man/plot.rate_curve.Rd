@@ -4,12 +4,14 @@
 \alias{plot.rate_curve}
 \title{Plots a rate curve}
 \usage{
-\method{plot}{rate_curve}(x, rate_type = NULL, ...)
+\method{plot}{rate_curve}(x, rate_type = NULL, factor = 1, ...)
 }
 \arguments{
 \item{x}{The rate curve}
 
 \item{rate_type}{The rate types to plot, in c("french","fut","german","zero_eff","zero_nom","swap")}
+
+\item{factor}{The factor to rescale the rate. For zero_nom, the rescaled rate is rate * factor, for the others (1 + rate) ^ factor - 1}
 
 \item{...}{Other arguments (unused)}
 }

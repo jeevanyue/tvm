@@ -150,6 +150,7 @@ get_rate_fun <- function(r, rate_type = "zero_eff") {
 #' 
 #' @param x The rate curve
 #' @param rate_type The rate types to plot, in c("french","fut","german","zero_eff","zero_nom","swap")
+#' @param factor The factor to rescale the rate. For zero_nom, the rescaled rate is rate * factor, for the others (1 + rate) ^ factor - 1
 #' @param ... Other arguments (unused)
 #' @examples
 #' r <- rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero_eff")
@@ -159,7 +160,7 @@ get_rate_fun <- function(r, rate_type = "zero_eff") {
 #' plot(r, rate_type = c("french", "german"))
 #' }
 #' @export
-plot.rate_curve <- function(x, rate_type = NULL, ...) {
+plot.rate_curve <- function(x, rate_type = NULL, factor = 1, ...) {
   all_rate_types = c("french","fut","german","zero_eff","zero_nom","swap")
   if (is.null(rate_type)) {
     rate_type = all_rate_types
@@ -173,6 +174,8 @@ plot.rate_curve <- function(x, rate_type = NULL, ...) {
     ))
   names(df) <- rate_type
   df$Time = x$knots    
+  if (!is.null(df[["zero_nom"]])) df[["zero_nom"]] <- df[["zero_nom"]] * factor
+  for (rt in rate_type) if (rt != "zero_nom") df[[rt]] <- (1 + df[[rt]]) ^ factor - 1
   dfm <- reshape2::melt(data = df, id.vars = "Time", variable.name = "RateType", value.name = "Rate")
   ggplot2::ggplot(data = dfm) +
     ggplot2::geom_line(mapping = ggplot2::aes_string(x = "Time", y = "Rate", color = "RateType"))
