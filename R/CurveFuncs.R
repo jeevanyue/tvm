@@ -108,7 +108,7 @@ rate_curve <- function(
     r
   } else if (!is.null(fun_r)) {
     d <- do.call(what = paste0(rate_type,"_to_disc"), args = list(fun_r(knots)))
-    f <- functor(x = knots, y = d)    
+    f <- functor(x = c(0 , knots), y = c(1 , d))    
     rate_curve(fun_d = f, knots = knots, functor = functor)
   } else if (!is.null(rates)) {
     f <- functor(x = pers, y = rates)
@@ -179,4 +179,22 @@ plot.rate_curve <- function(x, rate_type = NULL, factor = 1, ...) {
   dfm <- reshape2::melt(data = df, id.vars = "Time", variable.name = "RateType", value.name = "Rate")
   ggplot2::ggplot(data = dfm) +
     ggplot2::geom_line(mapping = ggplot2::aes_string(x = "Time", y = "Rate", color = "RateType"))
+}
+
+#' @title Calculates the present value of a cashflow
+#' 
+#' @param r A rate curve
+#' @param cf The vector of values corresponding to the cashflow
+#' @param d The periods on which the cashflow occurs. If missing, it is assumed that cf[i] occurs on period i
+#' 
+#' @return The present value of the cashflow
+#' 
+#' @examples
+#' r <- rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero_eff")
+#' disc_value(r, cf = c(-1, 1.10), d = c(0,1))
+#' disc_value(r, cf = c(-1, 1.15*1.15), d = c(0,2))
+#' 
+#' @export
+disc_value <- function(r, cf, d = 1:length(cf)) {
+  sum(r$f(d) * cf)
 }
