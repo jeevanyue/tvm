@@ -65,11 +65,39 @@ dir_to_eff <- function(r) {
   (1 + r) ^ (1 / seq_along(r)) - 1
 }
 
+unscale_nom <- function(x, rate_scale) x / rate_scale
+
+rescale_nom <- function(x, rate_scale) x * rate_scale
+
+unscale_eff <- function(x, rate_scale) (1 + x) ^ (1 / rate_scale) - 1
+
+rescale_eff <- function(x, rate_scale) (1 + x) ^ (rate_scale) - 1
+
+unscale <- function(x, rate_scale, rate_type) {
+  if (rate_type %in% c("zero_nom", "german", "french", "swap")) {
+    unscale_nom(x, rate_scale)
+  } else {
+    unscale_eff(x, rate_scale)
+  }
+}
+
+rescale <- function(x, rate_scale, rate_type) {
+  if (rate_type %in% c("zero_nom", "german", "french", "swap")) {
+    rescale_nom(x, rate_scale)
+  } else {
+    rescale_eff(x, rate_scale)
+  }
+}
+
 #' @title Creates a rate curve instance
 #' 
 #' @param rates A rate vector
 #' @param rate_type The rate type. Must be on of c("fut", "zero_nom", "zero_eff", "swap")
 #' @param pers The periods the rates correspond to
+#' @param rate_scale In how many periods is the rate expressed.
+#' For example, when measuring periods in days, and using annual rates, you should use 365. 
+#' When measuring periods in months, and using annual rates, you should use 12.
+#' If no scaling, use 1.
 #' @param fun_d A discount factor function. fun_d(x) returns the discount factor for time x, vectorized on x
 #' @param fun_r A rate function. fun_r(x) returns the EPR for time x, vectorized on x
 #' @param knots The nodes used to bootstrap the rates. This is a mandatory argument if a rate function or discount function is provided
@@ -90,6 +118,7 @@ rate_curve <- function(
   rates = NULL,
   rate_type = "zero_eff",
   pers = 1:length(rates),
+  rate_scale = 1,
   fun_d = NULL,
   fun_r = NULL,
   knots = seq.int(from = 1, to = max(pers), by = 1),
@@ -105,14 +134,16 @@ rate_curve <- function(
     r$f <- fun_d
     r$knots <- knots
     r$functor <- functor
+    r$rate_scale <- rate_scale
     r
   } else if (!is.null(fun_r)) {
-    d <- do.call(what = paste0(rate_type,"_to_disc"), args = list(fun_r(knots)))
+    x <- unscale(x = fun_r(knots), rate_scale = rate_scale, rate_type = rate_type)
+    d <- do.call(what = paste0(rate_type,"_to_disc"), args = list(x))
     f <- functor(x = c(0 , knots), y = c(1 , d))    
-    rate_curve(fun_d = f, knots = knots, functor = functor)
+    rate_curve(fun_d = f, knots = knots, functor = functor, rate_scale = rate_scale)
   } else if (!is.null(rates)) {
     f <- functor(x = pers, y = rates)
-    rate_curve(fun_r = f, rate_type = rate_type, knots = knots, functor = functor)
+    rate_curve(fun_r = f, rate_type = rate_type, knots = knots, functor = functor, rate_scale = rate_scale)
   } else {
     stop("The rate_curve constructor lacks arguments")
   }  
@@ -122,7 +153,8 @@ get_rate_fun <- function(r, rate_type = "zero_eff") {
   stopifnot(rate_type %in% c("french","fut","german","zero_eff","zero_nom","swap"))
   d <- (r$f)(r$knots)
   y <- do.call(what = paste0("disc_to_",rate_type), args = list(d))
-  r$functor(x = r$knots, y = y)
+  f <- r$functor(x = r$knots, y = y)
+  function(x) rescale(f(x), rate_scale = r$rate_scale, rate_type = rate_type)
 }
 
 #' @title Returns a particular rate or rates from a curve
@@ -150,7 +182,6 @@ get_rate_fun <- function(r, rate_type = "zero_eff") {
 #' 
 #' @param x The rate curve
 #' @param rate_type The rate types to plot, in c("french","fut","german","zero_eff","zero_nom","swap")
-#' @param factor The factor to rescale the rate. For zero_nom, the rescaled rate is rate * factor, for the others (1 + rate) ^ factor - 1
 #' @param ... Other arguments (unused)
 #' @examples
 #' r <- rate_curve(rates = c(0.1, 0.2, 0.3), rate_type = "zero_eff")
@@ -174,8 +205,6 @@ plot.rate_curve <- function(x, rate_type = NULL, factor = 1, ...) {
     ))
   names(df) <- rate_type
   df$Time = x$knots    
-  if (!is.null(df[["zero_nom"]])) df[["zero_nom"]] <- df[["zero_nom"]] * factor
-  for (rt in rate_type) if (rt != "zero_nom") df[[rt]] <- (1 + df[[rt]]) ^ factor - 1
   dfm <- reshape2::melt(data = df, id.vars = "Time", variable.name = "RateType", value.name = "Rate")
   ggplot2::ggplot(data = dfm) +
     ggplot2::geom_line(mapping = ggplot2::aes_string(x = "Time", y = "Rate", color = "RateType"))
