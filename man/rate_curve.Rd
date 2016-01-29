@@ -5,8 +5,9 @@
 \title{Creates a rate curve instance}
 \usage{
 rate_curve(rates = NULL, rate_type = "zero_eff", pers = 1:length(rates),
-  fun_d = NULL, fun_r = NULL, knots = seq.int(from = 1, to = max(pers), by
-  = 1), functor = function(x, y) splinefun(x = x, y = y, method = "monoH.FC"))
+  rate_scale = 1, fun_d = NULL, fun_r = NULL, knots = seq.int(from = 1,
+  to = max(pers), by = 1), functor = function(x, y) splinefun(x = x, y = y,
+  method = "monoH.FC"))
 }
 \arguments{
 \item{rates}{A rate vector}
@@ -15,6 +16,11 @@ rate_curve(rates = NULL, rate_type = "zero_eff", pers = 1:length(rates),
 
 \item{pers}{The periods the rates correspond to}
 
+\item{rate_scale}{In how many periods is the rate expressed.
+For example, when measuring periods in days, and using annual rates, you should use 365. 
+When measuring periods in months, and using annual rates, you should use 12.
+If no scaling, use 1.}
+
 \item{fun_d}{A discount factor function. fun_d(x) returns the discount factor for time x, vectorized on x}
 
 \item{fun_r}{A rate function. fun_r(x) returns the EPR for time x, vectorized on x}
@@ -22,10 +28,6 @@ rate_curve(rates = NULL, rate_type = "zero_eff", pers = 1:length(rates),
 \item{knots}{The nodes used to bootstrap the rates. This is a mandatory argument if a rate function or discount function is provided}
 
 \item{functor}{A function with parameters x and y, that returns a function used to interpolate}
-
-\item{scale}{In how many periods is the rate expressed.
-For example, when measuring periods in days, and using annual rates, you should use 365. 
-When measuring periods in months, and using annual rates, you should use 12.}
 }
 \note{
 Currently a rate curve can only be built from one of the following sources

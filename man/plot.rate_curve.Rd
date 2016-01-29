@@ -11,8 +11,6 @@
 
 \item{rate_type}{The rate types to plot, in c("french","fut","german","zero_eff","zero_nom","swap")}
 
-\item{factor}{The factor to rescale the rate. For zero_nom, the rescaled rate is rate * factor, for the others (1 + rate) ^ factor - 1}
-
 \item{...}{Other arguments (unused)}
 }
 \examples{
